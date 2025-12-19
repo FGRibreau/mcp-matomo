@@ -1,0 +1,14 @@
+# Rust build artifacts
+/target/
+**/target/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# Generated files (keep as example)
+# matomo-api.json
+matomo-api.json
