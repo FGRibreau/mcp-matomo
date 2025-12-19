@@ -26,7 +26,11 @@ impl TestConfig {
         let url = std::env::var("URL").ok()?;
         let token = std::env::var("TOKEN").ok()?;
         let site_id = std::env::var("SITE_ID").ok()?;
-        Some(Self { url, token, site_id })
+        Some(Self {
+            url,
+            token,
+            site_id,
+        })
     }
 }
 
