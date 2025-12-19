@@ -136,7 +136,7 @@ claude mcp add matomo \
   --env "MCP_MATOMO_TOKEN=YOUR_API_TOKEN"
 ```
 
-Or manually edit `~/.claude/claude_desktop_config.json`:
+Or manually add it to your MCP settings file:
 
 ```json
 {
@@ -304,7 +304,7 @@ The MCP server dynamically generates tools based on your Matomo instance's API. 
 | `UserId_getUsers` | Metrics per individual User ID |
 | `AIAgents_get` | AI agents tracking |
 
-> **Note:** The exact tools available depend on your Matomo instance configuration and installed plugins. Run the OpenAPI generator to discover all available methods for your specific instance.
+> **Note:** The exact tools available depend on your Matomo instance configuration and installed plugins. Use `--url` to dynamically discover all available methods for your specific instance.
 
 ## CLI Reference
 
