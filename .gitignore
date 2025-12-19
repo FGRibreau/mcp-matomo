@@ -12,3 +12,6 @@
 # Generated files (keep as example)
 # matomo-api.json
 matomo-api.json
+
+.env
+.envrc
