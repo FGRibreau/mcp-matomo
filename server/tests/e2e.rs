@@ -9,6 +9,8 @@
 //!
 //! Run with:
 //!   source .envrc && cargo test --test e2e
+//!
+//! Note: Tests are automatically skipped when environment variables are not set.
 
 use std::collections::HashMap;
 
@@ -20,13 +22,25 @@ struct TestConfig {
 }
 
 impl TestConfig {
-    fn from_env() -> Self {
-        Self {
-            url: std::env::var("URL").expect("URL environment variable is required"),
-            token: std::env::var("TOKEN").expect("TOKEN environment variable is required"),
-            site_id: std::env::var("SITE_ID").expect("SITE_ID environment variable is required"),
-        }
+    fn from_env() -> Option<Self> {
+        let url = std::env::var("URL").ok()?;
+        let token = std::env::var("TOKEN").ok()?;
+        let site_id = std::env::var("SITE_ID").ok()?;
+        Some(Self { url, token, site_id })
     }
+}
+
+/// Macro to skip test if environment is not configured
+macro_rules! require_env {
+    () => {
+        match TestConfig::from_env() {
+            Some(config) => config,
+            None => {
+                eprintln!("Skipping test: URL, TOKEN, and SITE_ID environment variables required");
+                return;
+            }
+        }
+    };
 }
 
 /// Simple HTTP client for testing Matomo API calls directly
@@ -114,7 +128,7 @@ impl TestMatomoClient {
 
 #[tokio::test]
 async fn test_api_get_matomo_version() {
-    let config = TestConfig::from_env();
+    let config = require_env!();
     let client = TestMatomoClient::new(&config.url, &config.token);
 
     let result = client.call("API", "getMatomoVersion", HashMap::new()).await;
@@ -138,7 +152,7 @@ async fn test_api_get_matomo_version() {
 
 #[tokio::test]
 async fn test_api_get_php_version() {
-    let config = TestConfig::from_env();
+    let config = require_env!();
     let client = TestMatomoClient::new(&config.url, &config.token);
 
     let result = client.call("API", "getPhpVersion", HashMap::new()).await;
@@ -162,7 +176,7 @@ async fn test_api_get_php_version() {
 
 #[tokio::test]
 async fn test_api_get_ip_from_header() {
-    let config = TestConfig::from_env();
+    let config = require_env!();
     let client = TestMatomoClient::new(&config.url, &config.token);
 
     let result = client.call("API", "getIpFromHeader", HashMap::new()).await;
@@ -173,7 +187,7 @@ async fn test_api_get_ip_from_header() {
 
 #[tokio::test]
 async fn test_api_get_settings() {
-    let config = TestConfig::from_env();
+    let config = require_env!();
     let client = TestMatomoClient::new(&config.url, &config.token);
 
     let result = client.call("API", "getSettings", HashMap::new()).await;
@@ -193,7 +207,7 @@ async fn test_api_get_settings() {
 
 #[tokio::test]
 async fn test_visits_summary_get() {
-    let config = TestConfig::from_env();
+    let config = require_env!();
     let client = TestMatomoClient::new(&config.url, &config.token);
 
     let result = client
@@ -210,7 +224,7 @@ async fn test_visits_summary_get() {
 
 #[tokio::test]
 async fn test_visits_summary_get_visits() {
-    let config = TestConfig::from_env();
+    let config = require_env!();
     let client = TestMatomoClient::new(&config.url, &config.token);
 
     let result = client
@@ -227,7 +241,7 @@ async fn test_visits_summary_get_visits() {
 
 #[tokio::test]
 async fn test_visits_summary_get_unique_visitors() {
-    let config = TestConfig::from_env();
+    let config = require_env!();
     let client = TestMatomoClient::new(&config.url, &config.token);
 
     let result = client
@@ -252,7 +266,7 @@ async fn test_visits_summary_get_unique_visitors() {
 
 #[tokio::test]
 async fn test_actions_get() {
-    let config = TestConfig::from_env();
+    let config = require_env!();
     let client = TestMatomoClient::new(&config.url, &config.token);
 
     let result = client
@@ -268,7 +282,7 @@ async fn test_actions_get() {
 
 #[tokio::test]
 async fn test_actions_get_page_urls() {
-    let config = TestConfig::from_env();
+    let config = require_env!();
     let client = TestMatomoClient::new(&config.url, &config.token);
 
     let result = client
@@ -284,7 +298,7 @@ async fn test_actions_get_page_urls() {
 
 #[tokio::test]
 async fn test_actions_get_page_titles() {
-    let config = TestConfig::from_env();
+    let config = require_env!();
     let client = TestMatomoClient::new(&config.url, &config.token);
 
     let result = client
@@ -296,7 +310,7 @@ async fn test_actions_get_page_titles() {
 
 #[tokio::test]
 async fn test_actions_get_entry_page_urls() {
-    let config = TestConfig::from_env();
+    let config = require_env!();
     let client = TestMatomoClient::new(&config.url, &config.token);
 
     let result = client
@@ -316,7 +330,7 @@ async fn test_actions_get_entry_page_urls() {
 
 #[tokio::test]
 async fn test_actions_get_exit_page_urls() {
-    let config = TestConfig::from_env();
+    let config = require_env!();
     let client = TestMatomoClient::new(&config.url, &config.token);
 
     let result = client
@@ -332,7 +346,7 @@ async fn test_actions_get_exit_page_urls() {
 
 #[tokio::test]
 async fn test_actions_get_downloads() {
-    let config = TestConfig::from_env();
+    let config = require_env!();
     let client = TestMatomoClient::new(&config.url, &config.token);
 
     let result = client
@@ -344,7 +358,7 @@ async fn test_actions_get_downloads() {
 
 #[tokio::test]
 async fn test_actions_get_outlinks() {
-    let config = TestConfig::from_env();
+    let config = require_env!();
     let client = TestMatomoClient::new(&config.url, &config.token);
 
     let result = client
@@ -360,7 +374,7 @@ async fn test_actions_get_outlinks() {
 
 #[tokio::test]
 async fn test_referrers_get() {
-    let config = TestConfig::from_env();
+    let config = require_env!();
     let client = TestMatomoClient::new(&config.url, &config.token);
 
     let result = client
@@ -376,7 +390,7 @@ async fn test_referrers_get() {
 
 #[tokio::test]
 async fn test_referrers_get_all() {
-    let config = TestConfig::from_env();
+    let config = require_env!();
     let client = TestMatomoClient::new(&config.url, &config.token);
 
     let result = client
@@ -388,7 +402,7 @@ async fn test_referrers_get_all() {
 
 #[tokio::test]
 async fn test_referrers_get_referrer_type() {
-    let config = TestConfig::from_env();
+    let config = require_env!();
     let client = TestMatomoClient::new(&config.url, &config.token);
 
     let result = client
@@ -408,7 +422,7 @@ async fn test_referrers_get_referrer_type() {
 
 #[tokio::test]
 async fn test_referrers_get_keywords() {
-    let config = TestConfig::from_env();
+    let config = require_env!();
     let client = TestMatomoClient::new(&config.url, &config.token);
 
     let result = client
@@ -420,7 +434,7 @@ async fn test_referrers_get_keywords() {
 
 #[tokio::test]
 async fn test_referrers_get_search_engines() {
-    let config = TestConfig::from_env();
+    let config = require_env!();
     let client = TestMatomoClient::new(&config.url, &config.token);
 
     let result = client
@@ -440,7 +454,7 @@ async fn test_referrers_get_search_engines() {
 
 #[tokio::test]
 async fn test_referrers_get_websites() {
-    let config = TestConfig::from_env();
+    let config = require_env!();
     let client = TestMatomoClient::new(&config.url, &config.token);
 
     let result = client
@@ -452,7 +466,7 @@ async fn test_referrers_get_websites() {
 
 #[tokio::test]
 async fn test_referrers_get_socials() {
-    let config = TestConfig::from_env();
+    let config = require_env!();
     let client = TestMatomoClient::new(&config.url, &config.token);
 
     let result = client
@@ -464,7 +478,7 @@ async fn test_referrers_get_socials() {
 
 #[tokio::test]
 async fn test_referrers_get_campaigns() {
-    let config = TestConfig::from_env();
+    let config = require_env!();
     let client = TestMatomoClient::new(&config.url, &config.token);
 
     let result = client
@@ -484,7 +498,7 @@ async fn test_referrers_get_campaigns() {
 
 #[tokio::test]
 async fn test_user_country_get_country() {
-    let config = TestConfig::from_env();
+    let config = require_env!();
     let client = TestMatomoClient::new(&config.url, &config.token);
 
     let result = client
@@ -504,7 +518,7 @@ async fn test_user_country_get_country() {
 
 #[tokio::test]
 async fn test_user_country_get_continent() {
-    let config = TestConfig::from_env();
+    let config = require_env!();
     let client = TestMatomoClient::new(&config.url, &config.token);
 
     let result = client
@@ -524,7 +538,7 @@ async fn test_user_country_get_continent() {
 
 #[tokio::test]
 async fn test_user_country_get_region() {
-    let config = TestConfig::from_env();
+    let config = require_env!();
     let client = TestMatomoClient::new(&config.url, &config.token);
 
     let result = client
@@ -536,7 +550,7 @@ async fn test_user_country_get_region() {
 
 #[tokio::test]
 async fn test_user_country_get_city() {
-    let config = TestConfig::from_env();
+    let config = require_env!();
     let client = TestMatomoClient::new(&config.url, &config.token);
 
     let result = client
@@ -552,7 +566,7 @@ async fn test_user_country_get_city() {
 
 #[tokio::test]
 async fn test_devices_detection_get_type() {
-    let config = TestConfig::from_env();
+    let config = require_env!();
     let client = TestMatomoClient::new(&config.url, &config.token);
 
     let result = client
@@ -576,7 +590,7 @@ async fn test_devices_detection_get_type() {
 
 #[tokio::test]
 async fn test_devices_detection_get_brand() {
-    let config = TestConfig::from_env();
+    let config = require_env!();
     let client = TestMatomoClient::new(&config.url, &config.token);
 
     let result = client
@@ -596,7 +610,7 @@ async fn test_devices_detection_get_brand() {
 
 #[tokio::test]
 async fn test_devices_detection_get_model() {
-    let config = TestConfig::from_env();
+    let config = require_env!();
     let client = TestMatomoClient::new(&config.url, &config.token);
 
     let result = client
@@ -616,7 +630,7 @@ async fn test_devices_detection_get_model() {
 
 #[tokio::test]
 async fn test_devices_detection_get_browsers() {
-    let config = TestConfig::from_env();
+    let config = require_env!();
     let client = TestMatomoClient::new(&config.url, &config.token);
 
     let result = client
@@ -636,7 +650,7 @@ async fn test_devices_detection_get_browsers() {
 
 #[tokio::test]
 async fn test_devices_detection_get_browser_versions() {
-    let config = TestConfig::from_env();
+    let config = require_env!();
     let client = TestMatomoClient::new(&config.url, &config.token);
 
     let result = client
@@ -656,7 +670,7 @@ async fn test_devices_detection_get_browser_versions() {
 
 #[tokio::test]
 async fn test_devices_detection_get_os_families() {
-    let config = TestConfig::from_env();
+    let config = require_env!();
     let client = TestMatomoClient::new(&config.url, &config.token);
 
     let result = client
@@ -676,7 +690,7 @@ async fn test_devices_detection_get_os_families() {
 
 #[tokio::test]
 async fn test_devices_detection_get_os_versions() {
-    let config = TestConfig::from_env();
+    let config = require_env!();
     let client = TestMatomoClient::new(&config.url, &config.token);
 
     let result = client
@@ -700,7 +714,7 @@ async fn test_devices_detection_get_os_versions() {
 
 #[tokio::test]
 async fn test_resolution_get_resolution() {
-    let config = TestConfig::from_env();
+    let config = require_env!();
     let client = TestMatomoClient::new(&config.url, &config.token);
 
     let result = client
@@ -720,7 +734,7 @@ async fn test_resolution_get_resolution() {
 
 #[tokio::test]
 async fn test_resolution_get_configuration() {
-    let config = TestConfig::from_env();
+    let config = require_env!();
     let client = TestMatomoClient::new(&config.url, &config.token);
 
     let result = client
@@ -744,7 +758,7 @@ async fn test_resolution_get_configuration() {
 
 #[tokio::test]
 async fn test_user_language_get_language() {
-    let config = TestConfig::from_env();
+    let config = require_env!();
     let client = TestMatomoClient::new(&config.url, &config.token);
 
     let result = client
@@ -764,7 +778,7 @@ async fn test_user_language_get_language() {
 
 #[tokio::test]
 async fn test_user_language_get_language_code() {
-    let config = TestConfig::from_env();
+    let config = require_env!();
     let client = TestMatomoClient::new(&config.url, &config.token);
 
     let result = client
@@ -788,7 +802,7 @@ async fn test_user_language_get_language_code() {
 
 #[tokio::test]
 async fn test_visitor_interest_get_number_of_visits_per_page() {
-    let config = TestConfig::from_env();
+    let config = require_env!();
     let client = TestMatomoClient::new(&config.url, &config.token);
 
     let result = client
@@ -808,7 +822,7 @@ async fn test_visitor_interest_get_number_of_visits_per_page() {
 
 #[tokio::test]
 async fn test_visitor_interest_get_number_of_visits_per_visit_duration() {
-    let config = TestConfig::from_env();
+    let config = require_env!();
     let client = TestMatomoClient::new(&config.url, &config.token);
 
     let result = client
@@ -832,7 +846,7 @@ async fn test_visitor_interest_get_number_of_visits_per_visit_duration() {
 
 #[tokio::test]
 async fn test_visit_time_get_visit_information_per_server_time() {
-    let config = TestConfig::from_env();
+    let config = require_env!();
     let client = TestMatomoClient::new(&config.url, &config.token);
 
     let result = client
@@ -852,7 +866,7 @@ async fn test_visit_time_get_visit_information_per_server_time() {
 
 #[tokio::test]
 async fn test_visit_time_get_visit_information_per_local_time() {
-    let config = TestConfig::from_env();
+    let config = require_env!();
     let client = TestMatomoClient::new(&config.url, &config.token);
 
     let result = client
@@ -872,7 +886,7 @@ async fn test_visit_time_get_visit_information_per_local_time() {
 
 #[tokio::test]
 async fn test_visit_time_get_by_day_of_week() {
-    let config = TestConfig::from_env();
+    let config = require_env!();
     let client = TestMatomoClient::new(&config.url, &config.token);
 
     let result = client
@@ -896,7 +910,7 @@ async fn test_visit_time_get_by_day_of_week() {
 
 #[tokio::test]
 async fn test_visit_frequency_get() {
-    let config = TestConfig::from_env();
+    let config = require_env!();
     let client = TestMatomoClient::new(&config.url, &config.token);
 
     let result = client
@@ -916,7 +930,7 @@ async fn test_visit_frequency_get() {
 
 #[tokio::test]
 async fn test_goals_get() {
-    let config = TestConfig::from_env();
+    let config = require_env!();
     let client = TestMatomoClient::new(&config.url, &config.token);
 
     let result = client
@@ -944,7 +958,7 @@ async fn test_goals_get() {
 
 #[tokio::test]
 async fn test_events_get_category() {
-    let config = TestConfig::from_env();
+    let config = require_env!();
     let client = TestMatomoClient::new(&config.url, &config.token);
 
     let result = client
@@ -956,7 +970,7 @@ async fn test_events_get_category() {
 
 #[tokio::test]
 async fn test_events_get_action() {
-    let config = TestConfig::from_env();
+    let config = require_env!();
     let client = TestMatomoClient::new(&config.url, &config.token);
 
     let result = client
@@ -968,7 +982,7 @@ async fn test_events_get_action() {
 
 #[tokio::test]
 async fn test_events_get_name() {
-    let config = TestConfig::from_env();
+    let config = require_env!();
     let client = TestMatomoClient::new(&config.url, &config.token);
 
     let result = client
@@ -984,7 +998,7 @@ async fn test_events_get_name() {
 
 #[tokio::test]
 async fn test_contents_get_content_names() {
-    let config = TestConfig::from_env();
+    let config = require_env!();
     let client = TestMatomoClient::new(&config.url, &config.token);
 
     let result = client
@@ -1004,7 +1018,7 @@ async fn test_contents_get_content_names() {
 
 #[tokio::test]
 async fn test_contents_get_content_pieces() {
-    let config = TestConfig::from_env();
+    let config = require_env!();
     let client = TestMatomoClient::new(&config.url, &config.token);
 
     let result = client
@@ -1028,7 +1042,7 @@ async fn test_contents_get_content_pieces() {
 
 #[tokio::test]
 async fn test_page_performance_get() {
-    let config = TestConfig::from_env();
+    let config = require_env!();
     let client = TestMatomoClient::new(&config.url, &config.token);
 
     let result = client
@@ -1044,7 +1058,7 @@ async fn test_page_performance_get() {
 
 #[tokio::test]
 async fn test_multi_sites_get_all() {
-    let config = TestConfig::from_env();
+    let config = require_env!();
     let client = TestMatomoClient::new(&config.url, &config.token);
 
     let mut params = HashMap::new();
@@ -1062,7 +1076,7 @@ async fn test_multi_sites_get_all() {
 
 #[tokio::test]
 async fn test_multi_sites_get_one() {
-    let config = TestConfig::from_env();
+    let config = require_env!();
     let client = TestMatomoClient::new(&config.url, &config.token);
 
     let result = client
@@ -1078,7 +1092,7 @@ async fn test_multi_sites_get_one() {
 
 #[tokio::test]
 async fn test_sites_manager_get_site_from_id() {
-    let config = TestConfig::from_env();
+    let config = require_env!();
     let client = TestMatomoClient::new(&config.url, &config.token);
 
     let mut params = HashMap::new();
@@ -1097,7 +1111,7 @@ async fn test_sites_manager_get_site_from_id() {
 
 #[tokio::test]
 async fn test_sites_manager_get_all_sites() {
-    let config = TestConfig::from_env();
+    let config = require_env!();
     let client = TestMatomoClient::new(&config.url, &config.token);
 
     let result = client
@@ -1117,7 +1131,7 @@ async fn test_sites_manager_get_all_sites() {
 
 #[tokio::test]
 async fn test_api_get_report_metadata() {
-    let config = TestConfig::from_env();
+    let config = require_env!();
     let client = TestMatomoClient::new(&config.url, &config.token);
 
     let mut params = HashMap::new();
@@ -1143,7 +1157,7 @@ async fn test_api_get_report_metadata() {
 
 #[tokio::test]
 async fn test_visits_summary_with_date_range() {
-    let config = TestConfig::from_env();
+    let config = require_env!();
     let client = TestMatomoClient::new(&config.url, &config.token);
 
     let mut params = HashMap::new();
@@ -1166,7 +1180,7 @@ async fn test_visits_summary_with_date_range() {
 
 #[tokio::test]
 async fn test_visits_summary_with_month_period() {
-    let config = TestConfig::from_env();
+    let config = require_env!();
     let client = TestMatomoClient::new(&config.url, &config.token);
 
     let mut params = HashMap::new();
@@ -1193,7 +1207,7 @@ async fn test_visits_summary_with_month_period() {
 
 #[tokio::test]
 async fn test_visits_summary_with_segment() {
-    let config = TestConfig::from_env();
+    let config = require_env!();
     let client = TestMatomoClient::new(&config.url, &config.token);
 
     let mut params = client.params(&config.site_id);
@@ -1219,7 +1233,7 @@ async fn test_visits_summary_with_segment() {
 
 #[tokio::test]
 async fn test_actions_get_page_urls_with_filter_limit() {
-    let config = TestConfig::from_env();
+    let config = require_env!();
     let client = TestMatomoClient::new(&config.url, &config.token);
 
     let mut params = client.params(&config.site_id);
@@ -1245,7 +1259,7 @@ async fn test_actions_get_page_urls_with_filter_limit() {
 
 #[tokio::test]
 async fn test_referrers_get_websites_with_expanded() {
-    let config = TestConfig::from_env();
+    let config = require_env!();
     let client = TestMatomoClient::new(&config.url, &config.token);
 
     let mut params = client.params(&config.site_id);
