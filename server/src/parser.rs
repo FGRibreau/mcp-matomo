@@ -11,6 +11,7 @@ use crate::types::{MatomoParameter, MethodMetadata, MethodParameter, ParameterTy
 pub struct ParsedReportMethod {
     pub module: String,
     pub action: String,
+    #[allow(dead_code)]
     pub name: String,
     pub documentation: Option<String>,
     pub category: Option<String>,
@@ -73,22 +74,11 @@ pub fn parse_api_reference(html: &str) -> Result<HashMap<String, MethodMetadata>
     let document = Html::parse_document(html);
     let mut methods = HashMap::new();
 
-    // Try to find method definitions in the HTML
-    // Matomo API reference typically has a structure like:
-    // <div class="method">
-    //   <h3>Module.action</h3>
-    //   <div class="parameters">...</div>
-    //   <a href="example_url">Example</a>
-    // </div>
-
-    // Selector for method headings (adjustable based on actual Matomo HTML structure)
+    // Selector for method headings
     let method_selector = Selector::parse("h2, h3, .apiMethod, .method-name").ok();
-    let _param_selector = Selector::parse(".parameter, .param, li").ok();
-    let _example_selector = Selector::parse("a[href*='format=JSON'], a[href*='format=json']").ok();
 
-    // Also try to parse from the raw text using regex patterns
+    // Try to parse from the raw text using regex patterns
     let method_pattern = Regex::new(r"(?m)^(\w+)\.(\w+)\s*\(?([^)]*)\)?").ok();
-    let _param_pattern = Regex::new(r"(\w+)\s*(?:=\s*'([^']*)'|\s*\(required\))?").ok();
 
     if let Some(pattern) = method_pattern {
         for cap in pattern.captures_iter(html) {
@@ -250,13 +240,6 @@ pub fn get_common_parameters() -> Vec<MatomoParameter> {
             description: Some("Response format (JSON, XML, CSV, etc.)".to_string()),
         },
         MatomoParameter {
-            name: "token_auth".to_string(),
-            required: false,
-            param_type: ParameterType::String,
-            default_value: None,
-            description: Some("Authentication token".to_string()),
-        },
-        MatomoParameter {
             name: "filter_limit".to_string(),
             required: false,
             param_type: ParameterType::Integer,
@@ -271,30 +254,4 @@ pub fn get_common_parameters() -> Vec<MatomoParameter> {
             description: Some("Offset for pagination".to_string()),
         },
     ]
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_parse_parameters_from_signature() {
-        let sig = "idSite, period, date, segment = ''";
-        let params = parse_parameters_from_signature(sig);
-
-        assert_eq!(params.len(), 4);
-        assert_eq!(params[0].name, "idSite");
-        assert!(params[0].required);
-        assert_eq!(params[3].name, "segment");
-        assert!(!params[3].required);
-    }
-
-    #[test]
-    fn test_infer_parameter_type() {
-        assert_eq!(infer_parameter_type("idSite", None), ParameterType::Integer);
-        assert_eq!(infer_parameter_type("date", None), ParameterType::Date);
-        assert_eq!(infer_parameter_type("isEnabled", None), ParameterType::Boolean);
-        assert_eq!(infer_parameter_type("filter_limit", None), ParameterType::Integer);
-        assert_eq!(infer_parameter_type("segment", None), ParameterType::String);
-    }
 }

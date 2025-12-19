@@ -98,7 +98,22 @@ pub struct Components {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub schemas: Option<HashMap<String, serde_json::Value>>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub security_schemes: Option<HashMap<String, serde_json::Value>>,
+    pub security_schemes: Option<HashMap<String, SecurityScheme>>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SecurityScheme {
+    #[serde(rename = "type")]
+    pub scheme_type: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "in")]
+    pub location: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub scheme: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

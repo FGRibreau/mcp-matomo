@@ -21,11 +21,18 @@
 <table>
   <tr>
     <td align="center" width="200">
+        <a href="https://getnatalia.com/">
+        <img src="assets/sponsors/natalia.svg" height="60" alt="Natalia"/><br/>
+        <b>Natalia</b>
+        </a><br/>
+        <sub>24/7 AI voice and whatsapp agent for customer services</sub>
+    </td>
+    <td align="center" width="200">
       <a href="https://nobullshitconseil.com/">
         <img src="assets/sponsors/nobullshitconseil.svg" height="60" alt="NoBullshitConseil"/><br/>
         <b>NoBullshitConseil</b>
       </a><br/>
-      <sub>No-nonsense tech consulting</sub>
+      <sub>360° tech consulting</sub>
     </td>
     <td align="center" width="200">
       <a href="https://www.hook0.com/">
@@ -41,13 +48,6 @@
       </a><br/>
       <sub>Sovereign cloud hosting in France</sub>
     </td>
-    <td align="center" width="200">
-      <a href="https://getnatalia.com/">
-        <img src="assets/sponsors/natalia.svg" height="60" alt="Natalia"/><br/>
-        <b>Natalia</b>
-      </a><br/>
-      <sub>24/7 AI agent for customer service</sub>
-    </td>
   </tr>
 </table>
 
@@ -55,10 +55,7 @@
 
 ## Overview
 
-This project provides two components:
-
-1. **`openapi-gen`** - A CLI tool that introspects your Matomo instance and generates an OpenAPI 3.0 specification
-2. **`server`** - An MCP server that reads the OpenAPI spec and exposes all Matomo API methods as tools
+This project provides an MCP server that exposes all available Matomo API methods as tools.
 
 ## Quick Start
 
@@ -76,15 +73,21 @@ cd mcp-matomo
 cargo build --release
 ```
 
-### 2. Generate the OpenAPI specification
+### 2. Run the MCP server
+
+The server can introspect your Matomo instance directly at startup:
 
 ```bash
-./target/release/matomo-openapi-generator \
+./target/release/mcp-matomo \
   --url https://your-matomo-instance.com \
-  --token YOUR_API_TOKEN \
-  --site-id 1 \
-  --output matomo-api.json
+  --token YOUR_API_TOKEN
 ```
+
+The server will:
+1. Connect to your Matomo instance
+2. Fetch all available API methods
+3. Generate the tool definitions dynamically
+4. Start listening on stdin/stdout for MCP messages
 
 <details>
 <summary>How to get your Matomo API token</summary>
@@ -97,21 +100,34 @@ cargo build --release
 
 </details>
 
-### 3. Test the MCP server
+### Alternative: Use a pre-generated OpenAPI specification
+
+If you prefer faster startup times (skipping the introspection step), you can use a pre-generated OpenAPI spec:
 
 ```bash
+# Use a pre-generated spec
 ./target/release/mcp-matomo \
   --openapi matomo-api.json \
   --token YOUR_API_TOKEN
 ```
 
-The server will start and listen on stdin/stdout for MCP messages.
+> **Note:** You can generate an OpenAPI spec by running the server with `--url` and saving the output, or by using an external OpenAPI generator.
 
 ## Configuration
 
 ### Claude Code
 
 Add the following to your Claude Code MCP settings. You can do this via the CLI:
+
+```bash
+# Dynamic introspection (recommended)
+claude mcp add matomo \
+  --command /path/to/mcp-matomo \
+  --args "--url" "https://your-matomo-instance.com" \
+  --env "MCP_MATOMO_TOKEN=YOUR_API_TOKEN"
+```
+
+Or with a pre-generated OpenAPI spec for faster startup:
 
 ```bash
 claude mcp add matomo \
@@ -127,7 +143,7 @@ Or manually edit `~/.claude/claude_desktop_config.json`:
   "mcpServers": {
     "matomo": {
       "command": "/path/to/mcp-matomo",
-      "args": ["--openapi", "/path/to/matomo-api.json"],
+      "args": ["--url", "https://your-matomo-instance.com"],
       "env": {
         "MCP_MATOMO_TOKEN": "YOUR_API_TOKEN"
       }
@@ -145,7 +161,7 @@ Add to `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS)
   "mcpServers": {
     "matomo": {
       "command": "/absolute/path/to/mcp-matomo",
-      "args": ["--openapi", "/absolute/path/to/matomo-api.json"],
+      "args": ["--url", "https://your-matomo-instance.com"],
       "env": {
         "MCP_MATOMO_TOKEN": "YOUR_API_TOKEN"
       }
@@ -292,35 +308,31 @@ The MCP server dynamically generates tools based on your Matomo instance's API. 
 
 ## CLI Reference
 
-### openapi-gen
+The MCP server can either introspect Matomo dynamically or use a pre-generated OpenAPI spec:
 
 ```
-matomo-openapi-generator [OPTIONS] --url <URL>
+mcp-matomo [OPTIONS]
 
 Options:
-  -u, --url <URL>            Base URL of the Matomo instance
-  -t, --token <TOKEN>        API token (token_auth)
-  -c, --cookies <COOKIES>    Authentication cookies (alternative to token)
-  -s, --site-id <SITE_ID>    Site ID for API calls [default: 1]
-  -o, --output <OUTPUT>      Output file path [default: matomo-openapi.json]
-  -d, --delay <DELAY>        Delay between requests in ms [default: 100]
-      --fetch-examples       Fetch example responses for schema inference
-      --date <DATE>          Date for examples [default: yesterday]
-      --period <PERIOD>      Period for examples [default: day]
+  -u, --url <URL>            Matomo instance URL (e.g., https://matomo.example.com)
+                             When provided, introspects the Matomo API at startup
+                             [env: MCP_MATOMO_URL]
+
+  -o, --openapi <OPENAPI>    Path to a pre-generated OpenAPI JSON file
+                             Use for faster startup with a cached spec
+                             [env: MCP_MATOMO_OPENAPI_FILE]
+
+  -t, --token <TOKEN>        Matomo API token (token_auth)
+                             [env: MCP_MATOMO_TOKEN]
+
+  -s, --site-id <SITE_ID>    Site ID for API introspection [default: 1]
+                             [env: MCP_MATOMO_SITE_ID]
+
   -h, --help                 Print help
+  -V, --version              Print version
 ```
 
-### server (mcp-matomo)
-
-```
-mcp-matomo [OPTIONS] --openapi <OPENAPI>
-
-Options:
-  -o, --openapi <OPENAPI>    Path to the OpenAPI JSON file
-  -t, --token <TOKEN>        Matomo API token (or set MCP_MATOMO_TOKEN env var)
-  -h, --help                 Print help
-```
-
+**Note:** Either `--url` or `--openapi` must be provided.
 
 ## Development
 
@@ -339,23 +351,27 @@ RUST_LOG=debug ./target/debug/mcp-matomo --openapi matomo-api.json --token YOUR_
 
 ### "No tools available"
 
-Make sure your OpenAPI JSON file is valid and contains paths. Regenerate it with:
+If using dynamic introspection (`--url`):
+1. Verify your Matomo instance is accessible
+2. Check that your API token has the correct permissions
+3. Try specifying a different `--site-id` if you have multiple sites
 
-```bash
-./target/release/matomo-openapi-generator --url YOUR_MATOMO_URL --token YOUR_TOKEN --output matomo-api.json
-```
+If using a pre-generated spec (`--openapi`):
+1. Make sure your OpenAPI JSON file is valid and contains paths
+2. Try using `--url` instead to regenerate the spec dynamically
 
 ### "401 Unauthorized" errors
 
 1. Verify your API token is correct
-2. Check that the token has sufficient permissions
+2. Check that the token has sufficient permissions (at least "view" access)
 3. Ensure the token is being passed correctly (via `--token` flag or `MCP_MATOMO_TOKEN` env var)
 
 ### "Connection refused" or timeouts
 
-1. Verify your Matomo instance is accessible
+1. Verify your Matomo instance is accessible from your machine
 2. Check for firewalls or VPN requirements
-3. Ensure the URL in the OpenAPI spec matches your current Matomo URL
+3. If using `--url`, ensure the URL is correct and includes the protocol (https://)
+4. If using `--openapi`, ensure the URL in the spec matches your current Matomo URL
 
 ## Contributing
 

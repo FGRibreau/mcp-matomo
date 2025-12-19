@@ -144,7 +144,6 @@ jobs:
           name: binaries-${{ matrix.target }}
           path: |
             target/${{ matrix.target }}/release/mcp-matomo${{ matrix.os == 'windows-latest' && '.exe' || '' }}
-            target/${{ matrix.target }}/release/matomo-openapi-generator${{ matrix.os == 'windows-latest' && '.exe' || '' }}
           if-no-files-found: error
 
   msrv:

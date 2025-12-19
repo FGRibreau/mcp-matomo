@@ -50,3 +50,7 @@ schemars = "0.8"
 
 # Indexmap for ordered JSON
 indexmap = { version = "2.0", features = ["serde"] }
+
+# HTML parsing for API reference
+scraper = "0.22"
+regex = "1.11"

@@ -1,3 +1,11 @@
+//! Schema inference for Matomo API responses.
+//!
+//! This module is used when `--fetch-examples` is enabled to infer
+//! JSON schemas from example responses. Currently unused in the server
+//! but kept for future enhancements.
+
+#![allow(dead_code)]
+
 use std::collections::HashMap;
 
 use crate::types::JsonSchema;
@@ -63,9 +71,6 @@ pub fn infer_schema(value: &serde_json::Value) -> JsonSchema {
             for (key, val) in obj {
                 let prop_schema = infer_schema(val);
                 properties.insert(key.clone(), prop_schema);
-
-                // Consider all properties as optional since we're inferring from examples
-                // In real usage, some properties might always be present
             }
 
             JsonSchema {
@@ -201,62 +206,5 @@ fn merge_schemas(schemas: &[JsonSchema]) -> JsonSchema {
             any_of: Some(schemas.to_vec()),
             ..Default::default()
         }
-    }
-}
-
-/// Analyze multiple example responses to build a more complete schema
-#[allow(dead_code)]
-pub fn analyze_responses(responses: &[serde_json::Value]) -> JsonSchema {
-    let schemas: Vec<JsonSchema> = responses
-        .iter()
-        .filter(|v| !v.is_null())
-        .map(infer_schema)
-        .collect();
-
-    if schemas.is_empty() {
-        return JsonSchema {
-            schema_type: "object".to_string(),
-            description: Some("No example responses available".to_string()),
-            ..Default::default()
-        };
-    }
-
-    merge_schemas(&schemas)
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use serde_json::json;
-
-    #[test]
-    fn test_infer_schema_primitive() {
-        assert_eq!(infer_schema(&json!(true)).schema_type, "boolean");
-        assert_eq!(infer_schema(&json!(42)).schema_type, "integer");
-        assert_eq!(infer_schema(&json!(3.14)).schema_type, "number");
-        assert_eq!(infer_schema(&json!("hello")).schema_type, "string");
-    }
-
-    #[test]
-    fn test_infer_schema_array() {
-        let schema = infer_schema(&json!([1, 2, 3]));
-        assert_eq!(schema.schema_type, "array");
-        assert!(schema.items.is_some());
-    }
-
-    #[test]
-    fn test_infer_schema_object() {
-        let schema = infer_schema(&json!({"name": "test", "value": 123}));
-        assert_eq!(schema.schema_type, "object");
-        assert!(schema.properties.is_some());
-        let props = schema.properties.unwrap();
-        assert!(props.contains_key("name"));
-        assert!(props.contains_key("value"));
-    }
-
-    #[test]
-    fn test_infer_date_format() {
-        let schema = infer_schema(&json!("2024-01-15"));
-        assert_eq!(schema.format, Some("date".to_string()));
     }
 }

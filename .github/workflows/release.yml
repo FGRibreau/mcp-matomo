@@ -72,14 +72,14 @@ jobs:
         if: matrix.os != 'windows-latest'
         run: |
           cd target/${{ matrix.target }}/release
-          tar -czvf ../../../mcp-matomo-${{ github.ref_name }}-${{ matrix.asset_name_suffix }}.tar.gz mcp-matomo matomo-openapi-generator
+          tar -czvf ../../../mcp-matomo-${{ github.ref_name }}-${{ matrix.asset_name_suffix }}.tar.gz mcp-matomo
           cd ../../..
 
       - name: Package (Windows)
         if: matrix.os == 'windows-latest'
         run: |
           cd target/${{ matrix.target }}/release
-          7z a ../../../mcp-matomo-${{ github.ref_name }}-${{ matrix.asset_name_suffix }}.zip mcp-matomo.exe matomo-openapi-generator.exe
+          7z a ../../../mcp-matomo-${{ github.ref_name }}-${{ matrix.asset_name_suffix }}.zip mcp-matomo.exe
           cd ../../..
 
       - name: Upload Release Asset (Unix)

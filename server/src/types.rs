@@ -107,13 +107,6 @@ impl Default for JsonSchema {
     }
 }
 
-/// Represents the raw API method list response from Matomo
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct MatomoApiMethodList {
-    #[serde(flatten)]
-    pub modules: HashMap<String, Vec<String>>,
-}
-
 /// Represents method metadata from the API documentation page
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MethodMetadata {
