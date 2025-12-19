@@ -2,7 +2,6 @@
 name = "mcp-matomo"
 version = "0.1.0"
 edition = "2021"
-rust-version = "1.85"
 description = "MCP server for Matomo Analytics API - Query your analytics data with Claude"
 authors = ["François-Guillaume Ribreau <rust@fgribreau.com>"]
 license = "MIT"

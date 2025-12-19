@@ -7,7 +7,7 @@
 <p align="center">
   <a href="https://github.com/FGRibreau/mcp-matomo/actions/workflows/ci.yml"><img src="https://github.com/FGRibreau/mcp-matomo/actions/workflows/ci.yml/badge.svg" alt="CI"/></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License: MIT"/></a>
-  <a href="https://www.rust-lang.org/"><img src="https://img.shields.io/badge/rust-1.85%2B-orange.svg" alt="Rust"/></a>
+  <a href="https://www.rust-lang.org/"><img src="https://img.shields.io/badge/rust-stable-orange.svg" alt="Rust"/></a>
 </p>
 
 <p align="center">
@@ -61,7 +61,7 @@ This project provides an MCP server that exposes all available Matomo API method
 
 ### Prerequisites
 
-- Rust 1.85+ ([install](https://rustup.rs/))
+- Rust stable ([install](https://rustup.rs/))
 - A Matomo instance with API access
 - A Matomo API token (`token_auth`)
 
