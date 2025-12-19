@@ -59,7 +59,13 @@ impl MatomoClient {
             let str_value = match value {
                 serde_json::Value::String(s) => s,
                 serde_json::Value::Number(n) => n.to_string(),
-                serde_json::Value::Bool(b) => if b { "1".to_string() } else { "0".to_string() },
+                serde_json::Value::Bool(b) => {
+                    if b {
+                        "1".to_string()
+                    } else {
+                        "0".to_string()
+                    }
+                }
                 serde_json::Value::Null => continue,
                 other => other.to_string(),
             };
@@ -67,7 +73,8 @@ impl MatomoClient {
         }
 
         // Make POST request (required for token_auth)
-        let response = self.client
+        let response = self
+            .client
             .post(url.as_str())
             .form(&form_params)
             .send()
@@ -82,13 +89,14 @@ impl MatomoClient {
         }
 
         // Try to parse as JSON
-        let json: serde_json::Value = serde_json::from_str(&text)
-            .unwrap_or_else(|_| serde_json::Value::String(text));
+        let json: serde_json::Value =
+            serde_json::from_str(&text).unwrap_or(serde_json::Value::String(text.clone()));
 
         // Check for Matomo error response
         if let Some(obj) = json.as_object() {
             if obj.get("result").and_then(|v| v.as_str()) == Some("error") {
-                let message = obj.get("message")
+                let message = obj
+                    .get("message")
                     .and_then(|v| v.as_str())
                     .unwrap_or("Unknown error");
                 anyhow::bail!("Matomo API error: {}", message);

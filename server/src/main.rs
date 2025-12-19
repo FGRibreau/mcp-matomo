@@ -53,8 +53,7 @@ async fn main() -> Result<()> {
     // Initialize logging to stderr (NEVER stdout for stdio transport!)
     tracing_subscriber::fmt()
         .with_env_filter(
-            EnvFilter::try_from_default_env()
-                .unwrap_or_else(|_| EnvFilter::new("info")),
+            EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info")),
         )
         .with_writer(std::io::stderr)
         .init();
@@ -69,14 +68,14 @@ async fn main() -> Result<()> {
         info!("Introspecting Matomo instance at: {}", url);
         let config = GeneratorConfig::new(url.clone(), args.token.clone())
             .with_site_id(args.site_id.clone());
-        generate_openapi_spec(&config).await
+        generate_openapi_spec(&config)
+            .await
             .context("Failed to generate OpenAPI specification from Matomo instance")?
     } else if let Some(openapi_path) = &args.openapi {
         // Load spec from file
         info!("Loading OpenAPI spec from: {:?}", openapi_path);
-        OpenApiSpec::from_file(
-            openapi_path.to_str().context("Invalid path")?
-        ).context("Failed to load OpenAPI specification")?
+        OpenApiSpec::from_file(openapi_path.to_str().context("Invalid path")?)
+            .context("Failed to load OpenAPI specification")?
     } else {
         // Neither --url nor --openapi provided
         anyhow::bail!(
@@ -91,16 +90,21 @@ async fn main() -> Result<()> {
         );
     };
 
-    info!("Loaded OpenAPI spec: {} v{}", spec.info.title, spec.info.version);
+    info!(
+        "Loaded OpenAPI spec: {} v{}",
+        spec.info.title, spec.info.version
+    );
     info!("Base URL: {:?}", spec.get_base_url());
 
     // Create the MCP service
-    let service = MatomoService::new(spec, args.token)
-        .context("Failed to create Matomo service")?;
+    let service =
+        MatomoService::new(spec, args.token).context("Failed to create Matomo service")?;
 
     // Start the stdio transport
     info!("Starting stdio transport...");
-    let server = service.serve(stdio()).await
+    let server = service
+        .serve(stdio())
+        .await
         .context("Failed to start MCP server")?;
 
     // Wait for the server to complete

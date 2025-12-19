@@ -26,11 +26,23 @@ pub fn parse_method_list(json: &serde_json::Value) -> Result<Vec<ParsedReportMet
             // Format from getReportMetadata: [{"module": "...", "action": "...", "name": "...", "documentation": "..."}, ...]
             for item in arr {
                 if let serde_json::Value::Object(obj) = item {
-                    let module = obj.get("module").and_then(|v| v.as_str()).unwrap_or_default();
-                    let action = obj.get("action").and_then(|v| v.as_str()).unwrap_or_default();
+                    let module = obj
+                        .get("module")
+                        .and_then(|v| v.as_str())
+                        .unwrap_or_default();
+                    let action = obj
+                        .get("action")
+                        .and_then(|v| v.as_str())
+                        .unwrap_or_default();
                     let name = obj.get("name").and_then(|v| v.as_str()).unwrap_or_default();
-                    let documentation = obj.get("documentation").and_then(|v| v.as_str()).map(|s| s.to_string());
-                    let category = obj.get("category").and_then(|v| v.as_str()).map(|s| s.to_string());
+                    let documentation = obj
+                        .get("documentation")
+                        .and_then(|v| v.as_str())
+                        .map(|s| s.to_string());
+                    let category = obj
+                        .get("category")
+                        .and_then(|v| v.as_str())
+                        .map(|s| s.to_string());
 
                     if !module.is_empty() && !action.is_empty() {
                         methods.push(ParsedReportMethod {
@@ -82,17 +94,26 @@ pub fn parse_api_reference(html: &str) -> Result<HashMap<String, MethodMetadata>
 
     if let Some(pattern) = method_pattern {
         for cap in pattern.captures_iter(html) {
-            let module = cap.get(1).map(|m| m.as_str().to_string()).unwrap_or_default();
-            let action = cap.get(2).map(|m| m.as_str().to_string()).unwrap_or_default();
+            let module = cap
+                .get(1)
+                .map(|m| m.as_str().to_string())
+                .unwrap_or_default();
+            let action = cap
+                .get(2)
+                .map(|m| m.as_str().to_string())
+                .unwrap_or_default();
             let params_str = cap.get(3).map(|m| m.as_str()).unwrap_or("");
 
             let method_name = format!("{}.{}", module, action);
             let parameters = parse_parameters_from_signature(params_str);
 
-            methods.insert(method_name, MethodMetadata {
-                parameters,
-                example_url: None,
-            });
+            methods.insert(
+                method_name,
+                MethodMetadata {
+                    parameters,
+                    example_url: None,
+                },
+            );
         }
     }
 
@@ -103,12 +124,12 @@ pub fn parse_api_reference(html: &str) -> Result<HashMap<String, MethodMetadata>
             if let Some((module, action)) = text.trim().split_once('.') {
                 let method_name = format!("{}.{}", module.trim(), action.trim());
 
-                if !methods.contains_key(&method_name) {
-                    methods.insert(method_name, MethodMetadata {
+                methods
+                    .entry(method_name)
+                    .or_insert_with(|| MethodMetadata {
                         parameters: Vec::new(),
                         example_url: None,
                     });
-                }
             }
         }
     }
@@ -131,7 +152,13 @@ fn parse_parameters_from_signature(signature: &str) -> Vec<MethodParameter> {
             params.push(MethodParameter {
                 name: name.trim().to_string(),
                 required: false,
-                default: Some(default.trim().trim_matches('\'').trim_matches('"').to_string()),
+                default: Some(
+                    default
+                        .trim()
+                        .trim_matches('\'')
+                        .trim_matches('"')
+                        .to_string(),
+                ),
             });
         } else {
             params.push(MethodParameter {
@@ -162,13 +189,30 @@ pub fn infer_parameter_type(name: &str, default: Option<&str>) -> ParameterType 
     if name_lower.contains("period") {
         return ParameterType::String;
     }
-    if name_lower.starts_with("is") || name_lower.starts_with("has") || name_lower.starts_with("enable") || name_lower.starts_with("disable") || name_lower.starts_with("show") || name_lower.starts_with("hide") || name_lower.starts_with("force") || name_lower.starts_with("keep") {
+    if name_lower.starts_with("is")
+        || name_lower.starts_with("has")
+        || name_lower.starts_with("enable")
+        || name_lower.starts_with("disable")
+        || name_lower.starts_with("show")
+        || name_lower.starts_with("hide")
+        || name_lower.starts_with("force")
+        || name_lower.starts_with("keep")
+    {
         return ParameterType::Boolean;
     }
-    if name_lower.contains("limit") || name_lower.contains("offset") || name_lower.contains("count") || name_lower.contains("rows") || name_lower.contains("max") || name_lower.contains("min") {
+    if name_lower.contains("limit")
+        || name_lower.contains("offset")
+        || name_lower.contains("count")
+        || name_lower.contains("rows")
+        || name_lower.contains("max")
+        || name_lower.contains("min")
+    {
         return ParameterType::Integer;
     }
-    if name_lower.contains("expanded") || name_lower.contains("flat") || name_lower.contains("serialize") {
+    if name_lower.contains("expanded")
+        || name_lower.contains("flat")
+        || name_lower.contains("serialize")
+    {
         return ParameterType::Boolean;
     }
 
@@ -223,7 +267,9 @@ pub fn get_common_parameters() -> Vec<MatomoParameter> {
             required: false,
             param_type: ParameterType::String,
             default_value: None,
-            description: Some("The date (YYYY-MM-DD or keywords like 'today', 'yesterday')".to_string()),
+            description: Some(
+                "The date (YYYY-MM-DD or keywords like 'today', 'yesterday')".to_string(),
+            ),
         },
         MatomoParameter {
             name: "segment".to_string(),

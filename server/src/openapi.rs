@@ -170,22 +170,28 @@ impl OpenApiSpec {
                 };
 
                 // Build description
-                let description = op.description.clone()
+                let description = op
+                    .description
+                    .clone()
                     .or(op.summary.clone())
                     .unwrap_or_else(|| format!("Call {}.{}", module, action));
 
                 // Extract parameters
-                let parameters: Vec<ToolParameter> = op.parameters
+                let parameters: Vec<ToolParameter> = op
+                    .parameters
                     .as_ref()
                     .map(|params| {
-                        params.iter().map(|p| ToolParameter {
-                            name: p.name.clone(),
-                            description: p.description.clone(),
-                            required: p.required,
-                            param_type: p.schema.schema_type.clone(),
-                            default: p.schema.default.clone(),
-                            enum_values: p.schema.enum_values.clone(),
-                        }).collect()
+                        params
+                            .iter()
+                            .map(|p| ToolParameter {
+                                name: p.name.clone(),
+                                description: p.description.clone(),
+                                required: p.required,
+                                param_type: p.schema.schema_type.clone(),
+                                default: p.schema.default.clone(),
+                                enum_values: p.schema.enum_values.clone(),
+                            })
+                            .collect()
                     })
                     .unwrap_or_default();
 

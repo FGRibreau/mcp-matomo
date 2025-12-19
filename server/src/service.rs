@@ -154,67 +154,63 @@ impl ServerHandler for MatomoService {
         }
     }
 
-    fn list_tools(
+    async fn list_tools(
         &self,
         _request: Option<PaginatedRequestParam>,
         _context: RequestContext<RoleServer>,
-    ) -> impl std::future::Future<Output = Result<ListToolsResult, ErrorData>> + Send + '_ {
-        async move {
-            debug!("Listing {} tools", self.tools.len());
-            let tools: Vec<Tool> = self.tools.iter().map(|t| self.tool_to_mcp(t)).collect();
-            Ok(ListToolsResult {
-                tools,
-                next_cursor: None,
-                meta: None,
-            })
-        }
+    ) -> Result<ListToolsResult, ErrorData> {
+        debug!("Listing {} tools", self.tools.len());
+        let tools: Vec<Tool> = self.tools.iter().map(|t| self.tool_to_mcp(t)).collect();
+        Ok(ListToolsResult {
+            tools,
+            next_cursor: None,
+            meta: None,
+        })
     }
 
-    fn call_tool(
+    async fn call_tool(
         &self,
         request: CallToolRequestParam,
         _context: RequestContext<RoleServer>,
-    ) -> impl std::future::Future<Output = Result<CallToolResult, ErrorData>> + Send + '_ {
-        async move {
-            let tool_name = request.name.as_ref();
-            debug!("Calling tool: {}", tool_name);
+    ) -> Result<CallToolResult, ErrorData> {
+        let tool_name = request.name.as_ref();
+        debug!("Calling tool: {}", tool_name);
 
-            // Find the tool
-            let tool = self.find_tool(tool_name).ok_or_else(|| {
-                ErrorData::invalid_params(format!("Unknown tool: {}", tool_name), None)
-            })?;
+        // Find the tool
+        let tool = self.find_tool(tool_name).ok_or_else(|| {
+            ErrorData::invalid_params(format!("Unknown tool: {}", tool_name), None)
+        })?;
 
-            // Extract parameters from arguments
-            let params: HashMap<String, serde_json::Value> = match request.arguments {
-                Some(map) => map.into_iter().collect(),
-                None => HashMap::new(),
-            };
+        // Extract parameters from arguments
+        let params: HashMap<String, serde_json::Value> = match request.arguments {
+            Some(map) => map.into_iter().collect(),
+            None => HashMap::new(),
+        };
 
-            // Call Matomo API
-            match self
-                .client
-                .call_method(&tool.module, &tool.action, params)
-                .await
-            {
-                Ok(result) => {
-                    // Format the response nicely
-                    let text = serde_json::to_string_pretty(&result)
-                        .unwrap_or_else(|_| result.to_string());
+        // Call Matomo API
+        match self
+            .client
+            .call_method(&tool.module, &tool.action, params)
+            .await
+        {
+            Ok(result) => {
+                // Format the response nicely
+                let text =
+                    serde_json::to_string_pretty(&result).unwrap_or_else(|_| result.to_string());
 
-                    Ok(CallToolResult {
-                        content: vec![Content::text(text).into()],
-                        is_error: Some(false),
-                        meta: None,
-                        structured_content: None,
-                    })
-                }
-                Err(e) => Ok(CallToolResult {
-                    content: vec![Content::text(format!("Error: {}", e)).into()],
-                    is_error: Some(true),
+                Ok(CallToolResult {
+                    content: vec![Content::text(text)],
+                    is_error: Some(false),
                     meta: None,
                     structured_content: None,
-                }),
+                })
             }
+            Err(e) => Ok(CallToolResult {
+                content: vec![Content::text(format!("Error: {}", e))],
+                is_error: Some(true),
+                meta: None,
+                structured_content: None,
+            }),
         }
     }
 }

@@ -14,7 +14,9 @@ use crate::openapi::{
     Components, Info, OpenApiSpec, Operation, Parameter, ParameterSchema, PathItem, Response,
     SecurityScheme, Server, Tag,
 };
-use crate::parser::{convert_parameter, get_common_parameters, parse_api_reference, parse_method_list};
+use crate::parser::{
+    convert_parameter, get_common_parameters, parse_api_reference, parse_method_list,
+};
 use crate::types::{JsonSchema, MatomoMethod, MatomoParameter};
 
 /// Configuration for OpenAPI generation
@@ -64,7 +66,12 @@ impl IntrospectionClient {
     }
 
     /// Make an API request - uses POST when token is present
-    async fn api_request(&self, module: &str, action: &str, extra_params: &[(&str, &str)]) -> Result<String> {
+    async fn api_request(
+        &self,
+        module: &str,
+        action: &str,
+        extra_params: &[(&str, &str)],
+    ) -> Result<String> {
         let mut url = self.base_url.clone();
         url.set_path("index.php");
 
@@ -83,7 +90,8 @@ impl IntrospectionClient {
                 form_params.push((key, value));
             }
 
-            let response = self.client
+            let response = self
+                .client
                 .post(url.as_str())
                 .form(&form_params)
                 .send()
@@ -97,7 +105,8 @@ impl IntrospectionClient {
                 if status == reqwest::StatusCode::UNAUTHORIZED {
                     anyhow::bail!(
                         "Authentication failed (HTTP 401). Please check your API token.\n\
-                         Response: {}", text
+                         Response: {}",
+                        text
                     );
                 }
                 anyhow::bail!("HTTP error {}: {}", status, text);
@@ -118,7 +127,8 @@ impl IntrospectionClient {
                 }
             }
 
-            let response = self.client
+            let response = self
+                .client
                 .get(url.as_str())
                 .send()
                 .await
@@ -138,15 +148,21 @@ impl IntrospectionClient {
     /// Fetch Matomo version
     async fn fetch_version(&self) -> Result<String> {
         let text = self.api_request("API", "getMatomoVersion", &[]).await?;
-        let json: serde_json::Value = serde_json::from_str(&text)
-            .context("Failed to parse version JSON")?;
-        Ok(json.get("value").and_then(|v| v.as_str()).unwrap_or("unknown").to_string())
+        let json: serde_json::Value =
+            serde_json::from_str(&text).context("Failed to parse version JSON")?;
+        Ok(json
+            .get("value")
+            .and_then(|v| v.as_str())
+            .unwrap_or("unknown")
+            .to_string())
     }
 
     /// Fetch method list using getReportMetadata
     async fn fetch_method_list(&self, site_id: &str) -> Result<serde_json::Value> {
         let extra_params = [("idSite", site_id)];
-        let text = self.api_request("API", "getReportMetadata", &extra_params).await?;
+        let text = self
+            .api_request("API", "getReportMetadata", &extra_params)
+            .await?;
         serde_json::from_str(&text).context("Failed to parse method list JSON")
     }
 
@@ -373,8 +389,10 @@ fn create_operation(method: &MatomoMethod) -> Operation {
 fn convert_to_openapi_parameter(param: &MatomoParameter) -> Parameter {
     let (schema_type, format) = param.param_type.to_openapi_type();
 
-    let default = param.default_value.as_ref().map(|d| {
-        match param.param_type {
+    let default = param
+        .default_value
+        .as_ref()
+        .map(|d| match param.param_type {
             crate::types::ParameterType::Integer => d
                 .parse::<i64>()
                 .map(|n| serde_json::Value::Number(n.into()))
@@ -391,8 +409,7 @@ fn convert_to_openapi_parameter(param: &MatomoParameter) -> Parameter {
                 serde_json::Value::Bool(d == "true" || d == "1")
             }
             _ => serde_json::Value::String(d.clone()),
-        }
-    });
+        });
 
     // Add enum values for known parameter types
     let enum_values = get_enum_values(&param.name);
