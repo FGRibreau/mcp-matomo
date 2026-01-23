@@ -10,6 +10,7 @@ use std::collections::HashMap;
 use tracing::{info, warn};
 use url::Url;
 
+use crate::http_client::build_client;
 use crate::openapi::{
     Components, Info, OpenApiSpec, Operation, Parameter, ParameterSchema, PathItem, Response,
     SecurityScheme, Server, Tag,
@@ -52,11 +53,9 @@ impl IntrospectionClient {
     fn new(base_url: &str, token: Option<String>) -> Result<Self> {
         let base_url = Url::parse(base_url).context("Invalid base URL")?;
 
-        let client = Client::builder()
-            .timeout(std::time::Duration::from_secs(60))
-            .danger_accept_invalid_certs(true) // Some Matomo instances have self-signed certs
-            .build()
-            .context("Failed to build HTTP client")?;
+        // Use shared HTTP client with custom User-Agent and extra headers
+        // accept_invalid_certs=true for Matomo instances with self-signed certs
+        let client = build_client(true)?;
 
         Ok(Self {
             client,

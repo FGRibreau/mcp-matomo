@@ -1,4 +1,5 @@
 mod generator;
+mod http_client;
 mod matomo_client;
 mod openapi;
 mod parser;

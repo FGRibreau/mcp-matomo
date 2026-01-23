@@ -334,6 +334,65 @@ Options:
 
 **Note:** Either `--url` or `--openapi` must be provided.
 
+---
+
+## HTTP Configuration
+
+### User-Agent
+
+All HTTP requests include a custom User-Agent header:
+
+```
+User-Agent: mcp-matomo/<version>
+```
+
+This can be useful for identifying MCP requests in your Matomo server logs or configuring firewall/proxy rules.
+
+### Extra Headers
+
+You can inject custom HTTP headers into all requests using the `MCP_MATOMO_EXTRA_HEADERS` environment variable.
+
+| Variable | Format | Description |
+|----------|--------|-------------|
+| `MCP_MATOMO_EXTRA_HEADERS` | `Header1:Value1,Header2:Value2` | Custom headers added to every HTTP request |
+
+**Example use cases:**
+- Bypass authentication proxies (Zero Trust, OAuth2 Proxy)
+- Add custom tracking headers
+- Pass tenant identifiers in multi-tenant setups
+
+```bash
+# Single header
+export MCP_MATOMO_EXTRA_HEADERS="X-Auth-Bypass:secret-token"
+
+# Multiple headers
+export MCP_MATOMO_EXTRA_HEADERS="Authorization:Bearer xyz,X-Tenant-Id:acme-corp"
+
+# In Claude Code configuration
+claude mcp add matomo \
+  --command /path/to/mcp-matomo \
+  --args "--url" "https://your-matomo-instance.com" \
+  --env "MCP_MATOMO_TOKEN=YOUR_API_TOKEN" \
+  --env "MCP_MATOMO_EXTRA_HEADERS=X-Custom:value"
+```
+
+**JSON configuration:**
+
+```json
+{
+  "mcpServers": {
+    "matomo": {
+      "command": "/path/to/mcp-matomo",
+      "args": ["--url", "https://your-matomo-instance.com"],
+      "env": {
+        "MCP_MATOMO_TOKEN": "YOUR_API_TOKEN",
+        "MCP_MATOMO_EXTRA_HEADERS": "X-Auth-Bypass:secret,X-Tenant:acme"
+      }
+    }
+  }
+}
+```
+
 ## Development
 
 ```bash

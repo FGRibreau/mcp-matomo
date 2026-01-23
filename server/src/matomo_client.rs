@@ -4,6 +4,8 @@ use std::collections::HashMap;
 use tracing::debug;
 use url::Url;
 
+use crate::http_client::build_client;
+
 /// HTTP client for making Matomo API calls
 #[derive(Debug, Clone)]
 pub struct MatomoClient {
@@ -17,10 +19,8 @@ impl MatomoClient {
     pub fn new(base_url: &str, token: Option<String>) -> Result<Self> {
         let base_url = Url::parse(base_url).context("Invalid base URL")?;
 
-        let client = Client::builder()
-            .timeout(std::time::Duration::from_secs(60))
-            .build()
-            .context("Failed to build HTTP client")?;
+        // Use shared HTTP client with custom User-Agent and extra headers
+        let client = build_client(false)?;
 
         Ok(Self {
             client,
