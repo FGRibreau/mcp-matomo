@@ -11,7 +11,6 @@ use tracing::{info, warn};
 use url::Url;
 
 use crate::http_client::build_client;
-use reqwest::header::HeaderMap;
 use crate::openapi::{
     Components, Info, OpenApiSpec, Operation, Parameter, ParameterSchema, PathItem, Response,
     SecurityScheme, Server, Tag,
@@ -20,6 +19,7 @@ use crate::parser::{
     convert_parameter, get_common_parameters, parse_api_reference, parse_method_list,
 };
 use crate::types::{JsonSchema, MatomoMethod, MatomoParameter};
+use reqwest::header::HeaderMap;
 
 /// Configuration for OpenAPI generation
 pub struct GeneratorConfig {

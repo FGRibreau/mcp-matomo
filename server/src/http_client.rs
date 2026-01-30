@@ -251,8 +251,7 @@ mod tests {
 
     #[test]
     fn test_parse_cli_headers_colon_in_value() {
-        let headers =
-            parse_cli_headers(&["Authorization:Bearer:abc:123".to_string()]).unwrap();
+        let headers = parse_cli_headers(&["Authorization:Bearer:abc:123".to_string()]).unwrap();
         assert_eq!(headers.len(), 1);
         assert_eq!(headers.get("Authorization").unwrap(), "Bearer:abc:123");
     }
