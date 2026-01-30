@@ -11,6 +11,7 @@ use tracing::{info, warn};
 use url::Url;
 
 use crate::http_client::build_client;
+use reqwest::header::HeaderMap;
 use crate::openapi::{
     Components, Info, OpenApiSpec, Operation, Parameter, ParameterSchema, PathItem, Response,
     SecurityScheme, Server, Tag,
@@ -50,12 +51,12 @@ struct IntrospectionClient {
 }
 
 impl IntrospectionClient {
-    fn new(base_url: &str, token: Option<String>) -> Result<Self> {
+    fn new(base_url: &str, token: Option<String>, extra_headers: &HeaderMap) -> Result<Self> {
         let base_url = Url::parse(base_url).context("Invalid base URL")?;
 
         // Use shared HTTP client with custom User-Agent and extra headers
         // accept_invalid_certs=true for Matomo instances with self-signed certs
-        let client = build_client(true)?;
+        let client = build_client(true, extra_headers)?;
 
         Ok(Self {
             client,
@@ -172,11 +173,14 @@ impl IntrospectionClient {
 }
 
 /// Generate OpenAPI specification by introspecting a Matomo instance
-pub async fn generate_openapi_spec(config: &GeneratorConfig) -> Result<OpenApiSpec> {
+pub async fn generate_openapi_spec(
+    config: &GeneratorConfig,
+    extra_headers: &HeaderMap,
+) -> Result<OpenApiSpec> {
     info!("Generating OpenAPI specification from Matomo instance...");
     info!("Target URL: {}", config.base_url);
 
-    let client = IntrospectionClient::new(&config.base_url, config.token.clone())?;
+    let client = IntrospectionClient::new(&config.base_url, config.token.clone(), extra_headers)?;
 
     // Fetch Matomo version
     let version = client.fetch_version().await.unwrap_or_else(|e| {

@@ -15,6 +15,7 @@ use tracing::info;
 use tracing_subscriber::EnvFilter;
 
 use crate::generator::{generate_openapi_spec, GeneratorConfig};
+use crate::http_client::parse_cli_headers;
 use crate::openapi::OpenApiSpec;
 use crate::service::MatomoService;
 
@@ -47,6 +48,12 @@ struct Args {
     /// Site ID to use when introspecting the API (default: 1)
     #[arg(short, long, env = "MCP_MATOMO_SITE_ID", default_value = "1")]
     site_id: String,
+
+    /// Extra HTTP headers to include in every Matomo API request (format: "Key:Value")
+    /// Can be specified multiple times: --header "X-Auth:token" --header "X-Tenant:abc"
+    /// Works alongside MCP_MATOMO_EXTRA_HEADERS environment variable
+    #[arg(short = 'H', long = "header")]
+    headers: Vec<String>,
 }
 
 #[tokio::main]
@@ -63,13 +70,17 @@ async fn main() -> Result<()> {
 
     info!("Starting MCP Matomo server");
 
+    // Parse CLI extra headers
+    let cli_headers =
+        parse_cli_headers(&args.headers).context("Failed to parse --header arguments")?;
+
     // Determine how to get the OpenAPI spec
     let spec = if let Some(url) = &args.url {
         // Generate spec by introspecting Matomo instance
         info!("Introspecting Matomo instance at: {}", url);
         let config = GeneratorConfig::new(url.clone(), args.token.clone())
             .with_site_id(args.site_id.clone());
-        generate_openapi_spec(&config)
+        generate_openapi_spec(&config, &cli_headers)
             .await
             .context("Failed to generate OpenAPI specification from Matomo instance")?
     } else if let Some(openapi_path) = &args.openapi {
@@ -98,8 +109,8 @@ async fn main() -> Result<()> {
     info!("Base URL: {:?}", spec.get_base_url());
 
     // Create the MCP service
-    let service =
-        MatomoService::new(spec, args.token).context("Failed to create Matomo service")?;
+    let service = MatomoService::new(spec, args.token, &cli_headers)
+        .context("Failed to create Matomo service")?;
 
     // Start the stdio transport
     info!("Starting stdio transport...");

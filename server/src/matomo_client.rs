@@ -5,6 +5,7 @@ use tracing::debug;
 use url::Url;
 
 use crate::http_client::build_client;
+use reqwest::header::HeaderMap;
 
 /// HTTP client for making Matomo API calls
 #[derive(Debug, Clone)]
@@ -16,11 +17,11 @@ pub struct MatomoClient {
 
 impl MatomoClient {
     /// Create a new Matomo client
-    pub fn new(base_url: &str, token: Option<String>) -> Result<Self> {
+    pub fn new(base_url: &str, token: Option<String>, extra_headers: &HeaderMap) -> Result<Self> {
         let base_url = Url::parse(base_url).context("Invalid base URL")?;
 
         // Use shared HTTP client with custom User-Agent and extra headers
-        let client = build_client(false)?;
+        let client = build_client(false, extra_headers)?;
 
         Ok(Self {
             client,

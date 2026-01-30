@@ -1,5 +1,6 @@
 use crate::matomo_client::MatomoClient;
 use crate::openapi::{MatomoTool, OpenApiSpec};
+use reqwest::header::HeaderMap;
 use rmcp::handler::server::ServerHandler;
 use rmcp::model::*;
 use rmcp::service::{RequestContext, RoleServer};
@@ -23,12 +24,16 @@ pub struct MatomoService {
 
 impl MatomoService {
     /// Create a new MatomoService from OpenAPI spec
-    pub fn new(spec: OpenApiSpec, token: Option<String>) -> anyhow::Result<Self> {
+    pub fn new(
+        spec: OpenApiSpec,
+        token: Option<String>,
+        extra_headers: &HeaderMap,
+    ) -> anyhow::Result<Self> {
         let base_url = spec
             .get_base_url()
             .ok_or_else(|| anyhow::anyhow!("No server URL in OpenAPI spec"))?;
 
-        let client = MatomoClient::new(&base_url, token)?;
+        let client = MatomoClient::new(&base_url, token, extra_headers)?;
         let tools = spec.extract_tools();
 
         info!("Loaded {} tools from OpenAPI spec", tools.len());
