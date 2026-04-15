@@ -151,6 +151,10 @@ impl OpenApiSpec {
         Ok(spec)
     }
 
+    /// Maximum tool name length allowed by Claude.
+    /// Claude rejects MCP tools whose name is 64 characters or longer.
+    pub const MAX_TOOL_NAME_LENGTH: usize = 64;
+
     /// Extract all tools from the OpenAPI spec
     pub fn extract_tools(&self) -> Vec<MatomoTool> {
         let mut tools = Vec::new();
@@ -160,6 +164,16 @@ impl OpenApiSpec {
             let operation = path_item.get.as_ref().or(path_item.post.as_ref());
 
             if let Some(op) = operation {
+                assert!(
+                    op.operation_id.len() < Self::MAX_TOOL_NAME_LENGTH,
+                    "Tool name '{}' is {} chars (max {}). \
+                     Claude rejects MCP tools with names >= {} chars.",
+                    op.operation_id,
+                    op.operation_id.len(),
+                    Self::MAX_TOOL_NAME_LENGTH - 1,
+                    Self::MAX_TOOL_NAME_LENGTH
+                );
+
                 // Parse operation_id to get module and action
                 // Format: "Module_action" -> module="Module", action="action"
                 let parts: Vec<&str> = op.operation_id.splitn(2, '_').collect();
@@ -211,5 +225,128 @@ impl OpenApiSpec {
     /// Get the base URL from servers
     pub fn get_base_url(&self) -> Option<String> {
         self.servers.first().map(|s| s.url.clone())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_all_tool_names_under_64_chars_from_spec_file() {
+        let spec = OpenApiSpec::from_file("../matomo-api.json")
+            .expect("Failed to load matomo-api.json - this file must exist for tests");
+
+        let tools = spec.extract_tools();
+
+        assert!(
+            !tools.is_empty(),
+            "No tools extracted from matomo-api.json. \
+             The spec file may be empty or malformed."
+        );
+
+        let mut violations = Vec::new();
+        for tool in &tools {
+            if tool.name.len() >= OpenApiSpec::MAX_TOOL_NAME_LENGTH {
+                violations.push(format!("'{}' ({} chars)", tool.name, tool.name.len()));
+            }
+        }
+
+        assert!(
+            violations.is_empty(),
+            "Tool names must be < {} characters. Claude rejects longer names.\n\
+             Violations:\n  {}",
+            OpenApiSpec::MAX_TOOL_NAME_LENGTH,
+            violations.join("\n  ")
+        );
+    }
+
+    #[test]
+    fn test_extract_tools_rejects_long_names() {
+        let long_name = "A".repeat(OpenApiSpec::MAX_TOOL_NAME_LENGTH);
+
+        let spec = OpenApiSpec {
+            openapi: "3.0.3".to_string(),
+            info: Info {
+                title: "Test".to_string(),
+                description: None,
+                version: "1.0".to_string(),
+            },
+            servers: vec![Server {
+                url: "http://localhost".to_string(),
+                description: None,
+            }],
+            paths: {
+                let mut paths = IndexMap::new();
+                paths.insert(
+                    "/test".to_string(),
+                    PathItem {
+                        get: Some(Operation {
+                            operation_id: long_name.clone(),
+                            summary: None,
+                            description: None,
+                            tags: None,
+                            parameters: None,
+                            responses: IndexMap::new(),
+                        }),
+                        post: None,
+                    },
+                );
+                paths
+            },
+            components: None,
+            tags: None,
+        };
+
+        let result = std::panic::catch_unwind(|| spec.extract_tools());
+        assert!(
+            result.is_err(),
+            "extract_tools() should panic for tool name '{}' ({} chars >= {})",
+            long_name,
+            long_name.len(),
+            OpenApiSpec::MAX_TOOL_NAME_LENGTH
+        );
+    }
+
+    #[test]
+    fn test_extract_tools_accepts_63_char_name() {
+        let name_63 = "A".repeat(OpenApiSpec::MAX_TOOL_NAME_LENGTH - 1);
+
+        let spec = OpenApiSpec {
+            openapi: "3.0.3".to_string(),
+            info: Info {
+                title: "Test".to_string(),
+                description: None,
+                version: "1.0".to_string(),
+            },
+            servers: vec![Server {
+                url: "http://localhost".to_string(),
+                description: None,
+            }],
+            paths: {
+                let mut paths = IndexMap::new();
+                paths.insert(
+                    "/test".to_string(),
+                    PathItem {
+                        get: Some(Operation {
+                            operation_id: name_63.clone(),
+                            summary: None,
+                            description: None,
+                            tags: None,
+                            parameters: None,
+                            responses: IndexMap::new(),
+                        }),
+                        post: None,
+                    },
+                );
+                paths
+            },
+            components: None,
+            tags: None,
+        };
+
+        let tools = spec.extract_tools();
+        assert_eq!(tools.len(), 1);
+        assert_eq!(tools[0].name, name_63);
     }
 }

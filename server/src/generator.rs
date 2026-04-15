@@ -323,6 +323,17 @@ fn build_openapi_spec(methods: &[MatomoMethod], base_url: &str, version: &str) -
 /// Create an OpenAPI operation from a Matomo method
 fn create_operation(method: &MatomoMethod) -> Operation {
     let operation_id = format!("{}_{}", method.module, method.action);
+
+    assert!(
+        operation_id.len() < OpenApiSpec::MAX_TOOL_NAME_LENGTH,
+        "Tool name '{}' is {} chars (max {}). \
+         Claude rejects MCP tools with names >= {} chars.",
+        operation_id,
+        operation_id.len(),
+        OpenApiSpec::MAX_TOOL_NAME_LENGTH - 1,
+        OpenApiSpec::MAX_TOOL_NAME_LENGTH
+    );
+
     let summary = Some(format!("{}.{}", method.module, method.action));
 
     // Convert parameters
