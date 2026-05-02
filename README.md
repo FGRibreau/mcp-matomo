@@ -20,33 +20,56 @@
 
 <table>
   <tr>
-    <td align="center" width="200">
-        <a href="https://getnatalia.com/">
-        <img src="assets/sponsors/natalia.svg" height="60" alt="Natalia"/><br/>
-        <b>Natalia</b>
-        </a><br/>
-        <sub>24/7 AI voice and whatsapp agent for customer services</sub>
-    </td>
-    <td align="center" width="200">
-      <a href="https://nobullshitconseil.com/">
-        <img src="assets/sponsors/nobullshitconseil.svg" height="60" alt="NoBullshitConseil"/><br/>
-        <b>NoBullshitConseil</b>
+    <td align="center" width="175">
+      <a href="https://france-nuage.fr/?mtm_source=github&mtm_medium=sponsor&mtm_campaign=france-nuage&mtm_content=mcp-matomo">
+        <img src="assets/sponsors/france-nuage.svg" height="60" alt="France-Nuage"/><br/>
+        <b>France-Nuage</b>
       </a><br/>
-      <sub>360° tech consulting</sub>
+      <sub>Host Matomo on sovereign French cloud. EU-only, re-internalisable.</sub>
     </td>
-    <td align="center" width="200">
-      <a href="https://www.hook0.com/">
+    <td align="center" width="175">
+      <a href="https://www.hook0.com/?mtm_source=github&mtm_medium=sponsor&mtm_campaign=hook0&mtm_content=mcp-matomo">
         <img src="assets/sponsors/hook0.png" height="60" alt="Hook0"/><br/>
         <b>Hook0</b>
       </a><br/>
-      <sub>Open-Source Webhooks-as-a-Service</sub>
+      <sub>Forward Matomo events as signed webhooks to your stack. Self-hostable.</sub>
     </td>
-    <td align="center" width="200">
-      <a href="https://france-nuage.fr/">
-        <img src="assets/sponsors/france-nuage.png" height="60" alt="France-Nuage"/><br/>
-        <b>France-Nuage</b>
+    <td align="center" width="175">
+      <a href="https://getnatalia.com/?mtm_source=github&mtm_medium=sponsor&mtm_campaign=natalia&mtm_content=mcp-matomo">
+        <img src="assets/sponsors/natalia.svg" height="60" alt="Natalia"/><br/>
+        <b>Natalia</b>
       </a><br/>
-      <sub>Sovereign cloud hosting in France</sub>
+      <sub>AI voice agent calls back the visitors your funnel just lost. 24/7.</sub>
+    </td>
+    <td align="center" width="175">
+      <a href="https://netir.fr/?mtm_source=github&mtm_medium=sponsor&mtm_campaign=netir&mtm_content=mcp-matomo">
+        <img src="assets/sponsors/netir.svg" height="60" alt="NetIR"/><br/>
+        <b>NetIR</b>
+      </a><br/>
+      <sub>Hire vetted French freelance analytics engineers via marketplace.</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="233">
+      <a href="https://nobullshitconseil.com/?mtm_source=github&mtm_medium=sponsor&mtm_campaign=nbc&mtm_content=mcp-matomo">
+        <img src="assets/sponsors/nobullshitconseil.svg" height="60" alt="NoBullshitConseil"/><br/>
+        <b>NoBullshitConseil</b>
+      </a><br/>
+      <sub>Tech advisory without the bullshit. Data &amp; analytics strategy.</sub>
+    </td>
+    <td align="center" width="233">
+      <a href="https://qualneo.fr/?mtm_source=github&mtm_medium=sponsor&mtm_campaign=qualneo&mtm_content=mcp-matomo">
+        <img src="assets/sponsors/qualneo.svg" height="60" alt="Qualneo"/><br/>
+        <b>Qualneo</b>
+      </a><br/>
+      <sub>Qualiopi LMS for French trainers. 32 indicators tracked end-to-end.</sub>
+    </td>
+    <td align="center" width="233">
+      <a href="https://recapro.ai/?mtm_source=github&mtm_medium=sponsor&mtm_campaign=recapro&mtm_content=mcp-matomo">
+        <img src="assets/sponsors/recapro.png" height="60" alt="Recapro"/><br/>
+        <b>Recapro</b>
+      </a><br/>
+      <sub>Private AI for client analytics reviews. Transcribe &amp; report sovereign.</sub>
     </td>
   </tr>
 </table>
